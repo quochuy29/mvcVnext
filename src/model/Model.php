@@ -43,6 +43,7 @@ class Model
     {
         $sql = "insert into " . $this->table;
         $sql .= "(";
+
         foreach ($data as $key => $col) {
             $sql .= " $key, ";
         }

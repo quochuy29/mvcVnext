@@ -1,13 +1,31 @@
+if (window.performance) {
+    sessionStorage.setItem('page', 1);
+}
+
 function getData(e) {
-    let page = $(e).data('page') ? $(e).data('page') : 1;
+    if (sessionStorage.getItem('page') > page) {
+        var page = sessionStorage.getItem('page');
+    } else {
+        var page = ($(e).data('page') > 0) ? $(e).data('page') : 1;
+    }
+
+    sessionStorage.setItem('page', page);
+
     axios.get('/users/getUser', {
         params: {
-            page: page
+            page: sessionStorage.getItem('page'),
+            prev: $(e).data('prev') ? $(e).data('prev') : 0,
+            next: $(e).data('next') ? $(e).data('next') : 0,
+            search: $('#search').val()
         }
     }).then((result) => {
-        console.log(result);
+        sessionStorage.setItem('page', result.data.page);
         let option = `<option value="">Hãy chọn quê quán</option>`;
         let content = ``;
+        let page = `<li class="page-item disabled" id="prev-paginate">
+                        <a class="page-link" onclick="return getData(this);" data-prev="-1" href="#">Previous</a>
+                    </li>`;
+
         result.data.countries.map(function(el) {
             option += `
             <option value="${el.id}">${el.name}</option>
@@ -25,18 +43,39 @@ function getData(e) {
             <td>${el.nameCountry}</td>
             <td>
                 <div class="mb-3">
-                    <button type="button" class="btn btn-danger mt-1">
+                    <button type="button" data-id="${el.id}" id="editUser" class="btn btn-danger mt-1">
                         Sửa
                     </button>
-                    <button type="button" class="btn btn-warning mt-1">
+                    <button type="button" data-id="${el.id}" class="btn btn-warning mt-1">
                         Xoá
                     </button>
                 </div>
             </td>
         </tr>`
         })
+
+        for (let index = 1; index <= result.data.totalPage; index++) {
+            page += `<li class="page-item">
+                        <a class="page-link" onclick="return getData(this);" data-page="${index}" href="javascript:void(0);">${index}</a>
+                    </li>`;
+        }
+
+        page += `<li class="page-item" id="next-paginate">
+                    <a class="page-link" onclick="return getData(this);" data-next="1" href="javscript:void(0);">Next</a>
+                </li>`;
         document.querySelector('tbody').innerHTML = content;
         document.getElementById('countries').innerHTML = option;
+        document.getElementById('pagination').innerHTML = page;
+        if (sessionStorage.getItem('page') > 1) {
+            $('#prev-paginate').removeClass('disabled');
+        } else {
+            $('#prev-paginate').addClass('disabled');
+        }
+        if (sessionStorage.getItem('page') >= result.data.totalPage) {
+            $('#next-paginate').addClass('disabled');
+        } else {
+            $('#next-paginate').removeClass('disabled');
+        }
     }).catch((err) => {
         console.log(err);
     });
@@ -47,11 +86,11 @@ getData();
 
 $(document).ready(function(e) {
     $('#create').on('click', function(e) {
-        $('.wrapper').toggleClass('show');
+        $('.create').toggleClass('show');
     })
 
     $('#cancel').on('click', function(e) {
-        $('.wrapper').removeClass('show');
+        $('.create').removeClass('show');
     });
 
     $('#addForm').on('click', function(e) {
@@ -84,4 +123,88 @@ $(document).ready(function(e) {
         }
 
     })
+
+    $(document).on('click', '#editUser', function(e) {
+        var editUser = ``;
+        var option = ``;
+        axios.get("/users/getUser/" + $(e)[0].target.dataset.id).then(result => {
+            let userId = result.data.dataUserId;
+            result.data.countries.map(function(el) {
+                if (el.id == userId.country_id) {
+                    option += `<option selected value="${el.id}">${el.name}</option>`;
+                } else {
+                    option += `<option value="${el.id}">${el.name}</option>`;
+                }
+            })
+
+            editUser += `
+            <h1>Sửa người dùng</h1>
+            <div class="row">
+                <div class="mb-3 col">
+                    <label for="" class="form-label">Họ và tên</label>
+                    <input type="text" class="form-control" value="${userId.name}" id="name" name="name">
+                    <span class="text-danger"></span>
+                </div>
+                <div class="mb-3 col">
+                    <label for="" class="form-label">Số điện thoại</label>
+                    <input type="text" class="form-control" value="${userId.phone_number}" name="phone_number">
+                    <span class="text-danger"></span>
+                </div>
+            </div>
+            <div class="row">
+                <div class="mb-3 col">
+                    <label for="" class="form-label">Email</label>
+                    <input type="text" class="form-control" value="${userId.email}" name="email">
+                    <span class="text-danger"></span>
+                </div>
+                <div class="mb-3 col">
+                    <label for="" class="form-label">Ngày sinh</label>
+                    <input type="date" class="form-control" value="${userId.birth_date}" name="birth_date">
+                    <span class="text-danger"></span>
+                </div>
+            </div>
+            <div class="row">
+                <div class="mb-3 col">
+                    <label for="" class="form-label">Giới tính</label>
+                    <select name="gender" class="form-select">
+                        <option value="">Hãy chọn giới tính</option>
+                        <option ${(userId.gender == 0) ? "selected" : ""} value="0">Nữ</option>
+                        <option ${(userId.gender == 1) ? "selected" : ""} value="1">Nam</option>
+                    </select>
+                    <span class="text-danger"></span>
+                </div>
+                <div class="mb-3 col">
+                    <label for="" class="form-label">Quê quán</label>
+                    <select name="country_id" id="countries" class="form-select">
+                        <option value="">Hãy chọn quê quán</option>
+                        ${option}
+                    </select>
+                    <span class="text-danger"></span>
+                </div>
+            </div>
+            <div class="row">
+                <div class="mb-3 col-12">
+                    <label for="" class="form-label">Ảnh đại diện</label>
+                    <input type="file" class="form-control" id="image" name="avatar">
+                    <img id="images" width="70" src="${userId.avatar}" alt="">
+                    <span class="text-danger"></span>
+                </div>
+            </div>
+            <div class="row action text-center">
+                <div class="mb-3-col">
+                    <button type="submit" class="btn btn-primary" data-id="${userId.id}" id="editForm">Sửa</button>
+                    <button type="button" class="btn btn-success" id="copyForm">Copy</button>
+                    <button type="button" class="btn btn-danger" id="cancel">Huỷ</button>
+                </div>
+            </div>`;
+            document.getElementById('edit-user').innerHTML = editUser;
+        })
+        $('.edit').toggleClass('show-edit');
+    })
+
+    $('#editForm').on('click', function(e) {
+        let formData = new FormData($('.create-user')[0]);
+        axios.post('/users/edit/edits' + $(e)[0].target.dataset.id).then(result => {})
+    });
+
 })

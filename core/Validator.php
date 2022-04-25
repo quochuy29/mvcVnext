@@ -62,17 +62,22 @@ class Validator
 
     public function max($data, $value = '', $ruleName, $fieldKey)
     {
+        if ($data[$fieldKey] > $value) {
+            $this->errors[$fieldKey][$ruleName] = $this->message[$fieldKey . '.' . $ruleName];
+        }
+    }
+
+    public function size($data, $value = '', $ruleName, $fieldKey)
+    {
         if (is_array($data[$fieldKey])) {
-            foreach ($data[$fieldKey] as $key => $value) {
-                if (is_int($data[$fieldKey][$key])) {
-                    if ($data[$fieldKey][$key] > $value) {
-                        $this->errors[$fieldKey][$ruleName] = $this->message[$fieldKey . '.' . $ruleName];
+            foreach ($data[$fieldKey] as $key => $values) {
+                if ($key == "size") {
+                    if (is_int($data[$fieldKey][$key])) {
+                        if ($data[$fieldKey][$key] > ($value * 1000)) {
+                            $this->errors[$fieldKey][$ruleName] = $this->message[$fieldKey . '.' . $ruleName];
+                        }
                     }
                 }
-            }
-        } else {
-            if ($data[$fieldKey] > $value) {
-                $this->errors[$fieldKey][$ruleName] = $this->message[$fieldKey . '.' . $ruleName];
             }
         }
     }
@@ -98,6 +103,35 @@ class Validator
 
         if (isset($type[1])) {
             if (!in_array($type[1], $mimes)) {
+                $this->errors[$fieldKey][$ruleName] = $this->message[$fieldKey . '.' . $ruleName];
+            }
+        }
+    }
+
+    public function image($data, $value = '', $ruleName, $fieldKey)
+    {
+        $image = explode(',', $value);
+        $type = explode('/', $data[$fieldKey]['type']);
+
+        if (isset($type[0])) {
+            if (!in_array($type[0], $image)) {
+                $this->errors[$fieldKey][$ruleName] = $this->message[$fieldKey . '.' . $ruleName];
+            }
+        }
+    }
+
+    public function date($data, $value = '', $ruleName, $fieldKey)
+    {
+        if ($value == "y-m-d") {
+            $regex = "/^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$/";
+            if (!preg_match($regex, $data[$fieldKey])) {
+                $this->errors[$fieldKey][$ruleName] = $this->message[$fieldKey . '.' . $ruleName];
+            }
+        }
+
+        if ($value == "y/m/d") {
+            $regex = "/^[0-9]{4}\/(0[1-9]|1[0-2])\/(0[1-9]|[1-2][0-9]|3[0-1])$/";
+            if (!preg_match($regex, $data[$fieldKey])) {
                 $this->errors[$fieldKey][$ruleName] = $this->message[$fieldKey . '.' . $ruleName];
             }
         }

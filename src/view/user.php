@@ -13,7 +13,7 @@
 </head>
 
 <body>
-    <div class="container-fluid wrapper">
+    <div class="container-fluid wrapper create">
         <div class="container-xl form-user">
             <form action="javascript:void(0);" method="post" enctype="multipart/form-data" class="create-user">
                 <h1>Thêm người dùng</h1>
@@ -75,10 +75,22 @@
             </form>
         </div>
     </div>
+    <div class="container-fluid wrapper edit">
+        <div class="container-xl edit-user">
+            <form action="javascript:void(0);" method="post" enctype="multipart/form-data" id="edit-user" class="create-user">
+                
+            </form>
+        </div>
+    </div>
     <div class="container">
         <div class="card card-outline">
             <div class="card-body">
                 <div class="row p-1">
+                    <div class="col-12 mb-1 d-flex justify-content-end">
+                        <div class="mb-3 col-4">
+                            <input type="text" class="form-control" id="search" onkeyup="setTimeout(function(){getData(this)},300)">
+                        </div>
+                    </div>
                     <div class="table-responsive">
                         <table class="table table-bordered data-table">
                             <thead>
@@ -98,16 +110,7 @@
                             </tbody>
                         </table>
                         <nav aria-label="...">
-                            <ul class="pagination">
-                                <li class="page-item">
-                                    <a class="page-link" onclick="getData(this)" data-page="1" href="javascript:void(0);">1</a>
-                                </li>
-                                <li class="page-item active" aria-current="page">
-                                    <a class="page-link" onclick="getData(this)" data-page="2" href="javascript:void(0);">2</a>
-                                </li>
-                                <li class="page-item">
-                                    <a class="page-link" onclick="getData(this)" data-page="3" href="javascript:void(0);">3</a>
-                                </li>
+                            <ul class="pagination" id="pagination">
                             </ul>
                         </nav>
                     </div>

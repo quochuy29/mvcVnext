@@ -15,6 +15,14 @@ class Request
         }
     }
 
+    public function changeFile($file){
+        if (!empty($_FILES)) {
+            foreach ($_FILES as $key => $value) {
+                $_POST[$key] = $file;
+            }
+        }
+    }
+
     public function all()
     {
         if ($this->isMethod() == "GET") {
@@ -44,7 +52,7 @@ class Request
 
     public function checkParam()
     {
-        if (preg_match("/{/", $_SERVER['REQUEST_URI'] ?? "/")) {
+        if (preg_match("/{/", $this->param)) {
             return true;
         }
 
@@ -59,7 +67,7 @@ class Request
         if ($this->checkCountArrayPath()) {
             return $this->param;
         }
-
+        
         if ($position === false) {
             return $path;
         }

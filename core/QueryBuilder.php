@@ -10,6 +10,9 @@ trait QueryBuilder
     private $operator = '';
     private $join = '';
     private $select = '*';
+    public $totalPage;
+    private $orderBy = "";
+    public $page;
 
     public function where($field, $compare = "=", $value)
     {
@@ -34,12 +37,24 @@ trait QueryBuilder
         return $this;
     }
 
-    public function paginate($perPage = 15, $column = ['*'])
+    public function paginate($perPage = 15)
     {
         $request = new Request();
-        $page = $request->all()['page'];
-        $start = ($page > 1) ? ($page * $perPage) - $perPage : 0;
-        $sql = "SELECT " . $this->select . " FROM $this->table " . $this->join . $this->where . "limit $start,$perPage";
+        $this->page = $request->all()['page'];
+        $prev = (int)$request->all()['prev'];
+        $next = (int)$request->all()['next'];
+
+        if ($prev < 0) {
+            $this->page = $this->page + $prev;
+        }
+
+        if ($next > 0) {
+            $this->page = $this->page + $next;
+        }
+        $start = ($this->page > 1) ? ($this->page * $perPage) - $perPage : 0;
+        $total = (int)$this->fetch("SELECT COUNT(*) FROM $this->table $this->where")[0];
+        $this->totalPage = ceil($total / $perPage);
+        $sql = "SELECT " . $this->select . " FROM $this->table " . $this->join . $this->where . $this->orderBy . " limit $start,$perPage";
         $conn = $this->connection();
         $sql = $conn->prepare($sql);
         $sql->execute();
@@ -53,5 +68,27 @@ trait QueryBuilder
         $sql = $conn->prepare($sql);
         $sql->execute();
         return $sql->fetchAll(PDO::FETCH_CLASS, get_class($this));
+    }
+
+    public function fetch($sql)
+    {
+        $conn = $this->connection();
+        $sql = $conn->prepare($sql);
+        $sql->execute();
+        return $sql->fetch();
+    }
+
+    public function first(){
+        $sql = "SELECT " . $this->select . " FROM $this->table " . $this->join . $this->where;
+        $conn = $this->connection();
+        $sql = $conn->prepare($sql);
+        $sql->execute();
+        return $sql->fetchObject(get_class($this));
+    }
+
+    public function orderBy($field = "id", $operator = "ASC")
+    {
+        $this->orderBy = " ORDER BY $field $operator";
+        return $this;
     }
 }

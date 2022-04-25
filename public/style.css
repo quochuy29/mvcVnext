@@ -31,6 +31,11 @@ body {
     z-index: 10000;
 }
 
+.show-edit {
+    opacity: 1;
+    z-index: 10000;
+}
+
 .form-user {
     display: flex;
     justify-content: center;
@@ -39,7 +44,22 @@ body {
     background-color: #fff;
     padding: 10px;
     position: absolute;
-    top: -160%
+    top: -160%;
+}
+
+.edit-user {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    vertical-align: middle;
+    background-color: #fff;
+    padding: 10px;
+    position: absolute;
+    top: -160%;
+}
+
+.show-edit .edit-user {
+    top: 14%;
 }
 
 .show .form-user {

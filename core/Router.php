@@ -17,6 +17,7 @@ class Router
     public function get($path, $callback)
     {
         $this->routes['get'][$path] = $callback;
+        
         $this->getParams($path);
     }
 
@@ -27,7 +28,7 @@ class Router
     }
 
     public function getParams($path)
-    {
+    {  
         $url = $_SERVER['REQUEST_URI'] ?? '/';
         if (count(explode('/', $url)) == count(explode('/', $path))) {
             $this->request->param = $path;
@@ -43,7 +44,7 @@ class Router
         $this->param = $this->request->getParam();
 
         $callback = $this->routes[$method][$path] ?? false;
-
+        
         $controller = new $callback[0]();
         call_user_func_array([$controller, $callback[1]], [$this->param]);
     }
