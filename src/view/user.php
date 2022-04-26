@@ -46,8 +46,8 @@
                         <label for="" class="form-label">Giới tính</label>
                         <select name="gender" class="form-select">
                             <option value="">Hãy chọn giới tính</option>
-                            <option value="0">Nữ</option>
-                            <option value="1">Nam</option>
+                            <option value="1">Nữ</option>
+                            <option value="2">Nam</option>
                         </select>
                         <span class="text-danger"></span>
                     </div>
@@ -82,6 +82,13 @@
             </form>
         </div>
     </div>
+    <div class="container-fluid wrapper copy">
+        <div class="container-xl copy-user">
+            <form action="javascript:void(0);" method="post" enctype="multipart/form-data" id="copy-user" class="create-user">
+                
+            </form>
+        </div>
+    </div>
     <div class="container">
         <div class="card card-outline">
             <div class="card-body">
@@ -89,6 +96,9 @@
                     <div class="col-12 mb-1 d-flex justify-content-end">
                         <div class="mb-3 col-4">
                             <input type="text" class="form-control" id="search" onkeyup="setTimeout(function(){getData(this)},300)">
+                        </div>
+                        <div class="mb-3 col-1 text-center">
+                            <button type="button" class="btn btn-success" id="clear">Clear</button>
                         </div>
                     </div>
                     <div class="table-responsive">

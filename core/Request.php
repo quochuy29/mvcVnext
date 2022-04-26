@@ -5,6 +5,8 @@ namespace App\core;
 class Request
 {
     public $param;
+    public $method;
+    public $route;
 
     public function __construct()
     {
@@ -15,7 +17,8 @@ class Request
         }
     }
 
-    public function changeFile($file){
+    public function changeFile($file)
+    {
         if (!empty($_FILES)) {
             foreach ($_FILES as $key => $value) {
                 $_POST[$key] = $file;
@@ -36,12 +39,15 @@ class Request
         return $_SERVER['REQUEST_METHOD'];
     }
 
-    public function checkCountArrayPath()
+    public function checkCountArrayPath($param,$key)
     {
-        if ($this->checkParam()) {
-            $key = explode("/", $this->param);
-            $params = explode("/", filter_var(rtrim($_SERVER['REQUEST_URI'] ?? '/', '/'), FILTER_SANITIZE_URL));
+        $this->param = &$param;
+        $this->method = &$key;
+ 
+        if ($this->checkParam($param)) {
 
+            $key = explode("/", $param);
+            $params = explode("/", filter_var(rtrim($_SERVER['REQUEST_URI'] ?? '/', '/'), FILTER_SANITIZE_URL));
             if (count($key) == count($params)) {
                 return true;
             }
@@ -52,22 +58,58 @@ class Request
 
     public function checkParam()
     {
-        if (preg_match("/{/", $this->param)) {
-            return true;
+        $param = explode('/', $this->param);
+        if (strtolower($this->method) == strtolower($this->isMethod())) {
+            if (preg_match("/^[\{]([a-z]|[A-Z]){1,20}[\}]$/", end($param))) {
+                return true;
+            }
         }
+        return false;
+    }
 
+    public function handleRoute($path, $route)
+    {
+        if (count($path) == 3) {
+            if ($path[1] == $route[1]) {
+                return true;
+            }
+        } elseif (count($path) == 4) {
+            if (($path[1] == $route[1]) && ($path[2] == $route[2])) {
+                return true;
+            }
+        } elseif (count($path) == 2) {
+            if ($path[1] == $route[1]) {
+                return true;
+            }
+        }
         return false;
     }
 
     public function getPath()
     {
         $path = $_SERVER['REQUEST_URI'] ?? '/';
+        $method = $this->isMethod();
         $position = strpos($path, '?');
 
-        if ($this->checkCountArrayPath()) {
-            return $this->param;
+        $route = $this->route;
+
+        foreach ($route as $key => $valueRoute) {
+            if (strtolower($method) == $key) {
+                foreach ($valueRoute as $keyRoute => $valueKeyRoute) {
+                    $pathArray = explode('/', $path);
+                    $keyRouteArray = explode('/', $keyRoute);
+                    if (count($pathArray) == count($keyRouteArray)) {
+                        $checkPathRoute = $this->handleRoute($pathArray, $keyRouteArray);
+                        if ($checkPathRoute) {
+                            if ($this->checkCountArrayPath($keyRoute,$key)) {
+                                return $keyRoute;
+                            }
+                        }
+                    }
+                }
+            }
         }
-        
+
         if ($position === false) {
             return $path;
         }
@@ -75,9 +117,10 @@ class Request
         return substr($path, 0, $position);
     }
 
-    public function getParam()
+    public function getParam($method)
     {
         $param = null;
+        $this->method = &$method;
         if ($this->checkParam()) {
             $getParam = [];
             $key = explode("/", $this->param);

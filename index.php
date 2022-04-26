@@ -17,6 +17,10 @@ $app->route->post('/users/create', [UserController::class, 'create']);
 
 $app->route->get('/users/getUser/{id}', [UserController::class, 'getUserId']);
 
-$app->route->post('/users/edit/edits/{id}',[UserController::class,'update']);
+$app->route->post('/users/edit/{id}',[UserController::class,'update']);
+
+$app->route->post('/users/copy/{id}',[UserController::class,'copy']);
+
+$app->route->delete('/users/{id}',[UserController::class,'delete']);
 
 $app->run();

@@ -11,7 +11,7 @@ trait QueryBuilder
     private $join = '';
     private $select = '*';
     public $totalPage;
-    private $orderBy = "";
+    private $orderBy = " ORDER BY id ASC";
     public $page;
 
     public function where($field, $compare = "=", $value)
@@ -88,7 +88,7 @@ trait QueryBuilder
 
     public function orderBy($field = "id", $operator = "ASC")
     {
-        $this->orderBy = " ORDER BY $field $operator";
+        $this->orderBy .= " ORDER BY $field $operator";
         return $this;
     }
 }

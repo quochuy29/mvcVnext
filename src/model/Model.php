@@ -59,6 +59,27 @@ class Model
         $this->save($sql);
     }
 
+    public function update($data,$id)
+    {
+        $sql = "update $this->table ";
+		$sql .= " set ";
+		foreach ($data as $key => $col) {
+			$sql .= " $key = '" . $col ."', ";
+		}
+		$sql = rtrim($sql, ", ");
+		
+		$sql .= " where id = '" . $id ."' ";
+        $this->save($sql);
+    }
+
+    public function delete()
+    {
+        $sql = "DELETE FROM $this->table $this->where";
+        $conn = $this->connection();
+        $sql = $conn->prepare($sql);
+        $sql->execute();
+    }
+
     public function save($sql)
     {
         $result = $this->connection()->prepare($sql);

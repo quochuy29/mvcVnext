@@ -33,7 +33,7 @@ function getData(e) {
         });
 
         result.data.users.map(function(el) {
-            el.gender = el.gender == 1 ? "Nam" : "Nữ";
+            el.gender = el.gender == 2 ? "Nam" : "Nữ";
             content += `<tr product-id="${el.id}">
             <td>${el.id}</td>
             <td>${el.name}</td>
@@ -46,7 +46,7 @@ function getData(e) {
                     <button type="button" data-id="${el.id}" id="editUser" class="btn btn-danger mt-1">
                         Sửa
                     </button>
-                    <button type="button" data-id="${el.id}" class="btn btn-warning mt-1">
+                    <button type="button" data-id="${el.id}" id="deleteUser" class="btn btn-warning mt-1">
                         Xoá
                     </button>
                 </div>
@@ -103,6 +103,7 @@ $(document).ready(function(e) {
                 };
                 toastr.error(errors);
             } else {
+                getData();
                 toastr.success("Lưu người dùng thành công");
             }
         }).catch((err) => {
@@ -168,8 +169,8 @@ $(document).ready(function(e) {
                     <label for="" class="form-label">Giới tính</label>
                     <select name="gender" class="form-select">
                         <option value="">Hãy chọn giới tính</option>
-                        <option ${(userId.gender == 0) ? "selected" : ""} value="0">Nữ</option>
-                        <option ${(userId.gender == 1) ? "selected" : ""} value="1">Nam</option>
+                        <option ${(userId.gender == 1) ? "selected" : ""} value="1">Nữ</option>
+                        <option ${(userId.gender == 2) ? "selected" : ""} value="2">Nam</option>
                     </select>
                     <span class="text-danger"></span>
                 </div>
@@ -185,16 +186,16 @@ $(document).ready(function(e) {
             <div class="row">
                 <div class="mb-3 col-12">
                     <label for="" class="form-label">Ảnh đại diện</label>
-                    <input type="file" class="form-control" id="image" name="avatar">
-                    <img id="images" width="70" src="${userId.avatar}" alt="">
+                    <input type="file" class="form-control" id="edit-image" name="avatar">
+                    <img id="edit-images" width="70" src="${userId.avatar}" alt="">
                     <span class="text-danger"></span>
                 </div>
             </div>
             <div class="row action text-center">
                 <div class="mb-3-col">
                     <button type="submit" class="btn btn-primary" data-id="${userId.id}" id="editForm">Sửa</button>
-                    <button type="button" class="btn btn-success" id="copyForm">Copy</button>
-                    <button type="button" class="btn btn-danger" id="cancel">Huỷ</button>
+                    <button type="button" class="btn btn-success" data-id="${userId.id}" id="copyForm">Copy</button>
+                    <button type="button" class="btn btn-danger" id="cancelEdit">Huỷ</button>
                 </div>
             </div>`;
             document.getElementById('edit-user').innerHTML = editUser;
@@ -202,9 +203,170 @@ $(document).ready(function(e) {
         $('.edit').toggleClass('show-edit');
     })
 
-    $('#editForm').on('click', function(e) {
-        let formData = new FormData($('.create-user')[0]);
-        axios.post('/users/edit/edits' + $(e)[0].target.dataset.id).then(result => {})
+    $(document).on('click', '#editForm', function(e) {
+        errors = ``;
+        let formData = new FormData($('#edit-user')[0]);
+        axios.post('/users/edit/' + $(e)[0].target.dataset.id, formData).then(result => {
+            console.log(result);
+            if (result.data.errors) {
+                for (const [key, value] of Object.entries(result.data.errors)) {
+                    errors += `${value}</br></br>`;
+                };
+                toastr.error(errors);
+            } else {
+                getData();
+                toastr.success(result.data.message);
+                $('.edit').removeClass('show-edit');
+            }
+        })
     });
 
+    $(document).on('click', '#cancelEdit', function(e) {
+        $('.edit').removeClass('show-edit');
+    })
+
+    $(document).on('change', '#edit-image', function(e) {
+        var reader = new FileReader();
+        var output = document.getElementById('edit-images');
+        reader.onload = function() {
+            output.src = reader.result;
+        };
+        if (e.target.files[0] == undefined) {
+            output.src = "";
+        } else {
+            reader.readAsDataURL(e.target.files[0]);
+        }
+
+    })
+
+    $(document).on('click', '#copyForm', function(e) {
+        let copyUser = ``;
+        let option = ``;
+        axios.get("/users/getUser/" + $(e)[0].target.dataset.id).then(result => {
+            let userId = result.data.dataUserId;
+            result.data.countries.map(function(el) {
+                if (el.id == userId.country_id) {
+                    option += `<option selected value="${el.id}">${el.name}</option>`;
+                } else {
+                    option += `<option value="${el.id}">${el.name}</option>`;
+                }
+            })
+
+            copyUser += `
+            <h1>Copy người dùng</h1>
+            <div class="row">
+                <div class="mb-3 col">
+                    <label for="" class="form-label">Họ và tên</label>
+                    <input type="text" class="form-control" value="${userId.name}" id="name" name="name">
+                    <span class="text-danger"></span>
+                </div>
+                <div class="mb-3 col">
+                    <label for="" class="form-label">Số điện thoại</label>
+                    <input type="text" class="form-control" value="${userId.phone_number}" name="phone_number">
+                    <span class="text-danger"></span>
+                </div>
+            </div>
+            <div class="row">
+                <div class="mb-3 col">
+                    <label for="" class="form-label">Email</label>
+                    <input type="text" class="form-control" value="${userId.email}" name="email">
+                    <span class="text-danger"></span>
+                </div>
+                <div class="mb-3 col">
+                    <label for="" class="form-label">Ngày sinh</label>
+                    <input type="date" class="form-control" value="${userId.birth_date}" name="birth_date">
+                    <span class="text-danger"></span>
+                </div>
+            </div>
+            <div class="row">
+                <div class="mb-3 col">
+                    <label for="" class="form-label">Giới tính</label>
+                    <select name="gender" class="form-select">
+                        <option value="">Hãy chọn giới tính</option>
+                        <option ${(userId.gender == 1) ? "selected" : ""} value="1">Nữ</option>
+                        <option ${(userId.gender == 2) ? "selected" : ""} value="2">Nam</option>
+                    </select>
+                    <span class="text-danger"></span>
+                </div>
+                <div class="mb-3 col">
+                    <label for="" class="form-label">Quê quán</label>
+                    <select name="country_id" id="countries" class="form-select">
+                        <option value="">Hãy chọn quê quán</option>
+                        ${option}
+                    </select>
+                    <span class="text-danger"></span>
+                </div>
+            </div>
+            <div class="row">
+                <div class="mb-3 col-12">
+                    <label for="" class="form-label">Ảnh đại diện</label>
+                    <input type="file" class="form-control" id="copy-image" name="avatar">
+                    <img id="copy-images" width="70" src="${userId.avatar}" alt="">
+                    <span class="text-danger"></span>
+                </div>
+            </div>
+            <div class="row action text-center">
+                <div class="mb-3-col">
+                    <button type="submit" class="btn btn-primary" data-id="${userId.id}" id="copyUser">Copy</button>
+                    <button type="button" class="btn btn-danger" id="cancelCopy">Huỷ</button>
+                </div>
+            </div>`;
+            document.getElementById('copy-user').innerHTML = copyUser;
+        })
+        $('.copy').toggleClass('show-copy');
+    })
+
+    $(document).on('click', '#cancelCopy', function(e) {
+        $('.copy').removeClass('show-copy');
+    })
+
+    $(document).on('change', '#copy-image', function(e) {
+        var reader = new FileReader();
+        var output = document.getElementById('copy-images');
+        reader.onload = function() {
+            output.src = reader.result;
+        };
+        if (e.target.files[0] == undefined) {
+            output.src = "";
+        } else {
+            reader.readAsDataURL(e.target.files[0]);
+        }
+
+    })
+
+    $(document).on('click', '#copyUser', function(e) {
+        errors = ``;
+        let formData = new FormData($('#copy-user')[0]);
+        axios.post('/users/copy/' + $(e)[0].target.dataset.id, formData).then(result => {
+            if (result.data.errors) {
+                for (const [key, value] of Object.entries(result.data.errors)) {
+                    errors += `${value}</br></br>`;
+                };
+                toastr.error(errors);
+            } else {
+                getData();
+                toastr.success(result.data.message);
+                $('.copy').removeClass('show-copy');
+            }
+        })
+    });
+
+    $(document).on('click', '#deleteUser', function(e) {
+        axios.delete('/users/' + $(e)[0].target.dataset.id).then(result => {
+            if (result.data.errors) {
+                for (const [key, value] of Object.entries(result.data.errors)) {
+                    errors += `${value}</br></br>`;
+                };
+                toastr.error(errors);
+            } else {
+                getData();
+                toastr.success(result.data.message);
+            }
+        })
+    });
+
+    $('#clear').on('click', function(e) {
+        $('#search').val('');
+        getData();
+    });
 })
